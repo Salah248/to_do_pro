@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: const NotificationScreen(payload: 'sssssssss|ddddddddd|eeeeeee'),
+      home: const NotificationScreen(payload: 'Title|Description|2023-10-01'),
     );
   }
 }

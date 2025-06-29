@@ -32,7 +32,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           icon: const Icon(Icons.arrow_back_ios),
         ),
         title: Text(
-          _payload.split('|')[1],
+          _payload.split('|')[0],
           style: TextStyle(color: Get.isDarkMode ? Colors.white : darkGreyClr),
         ),
       ),
@@ -64,24 +64,88 @@ class _NotificationScreenState extends State<NotificationScreen> {
             const SizedBox(height: 10),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.only(left: 30, right: 30),
-                margin: const EdgeInsets.only(left: 30, right: 30),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 30,
+                  horizontal: 30,
+                ),
+                margin: const EdgeInsets.symmetric(horizontal: 30),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
                   color: primaryClr,
                 ),
                 child: SingleChildScrollView(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      const Row(
                         children: [
+                          Icon(
+                            Icons.text_format,
+                            size: 30,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 20),
                           Text(
-                            'TITLE',
-                            style: TextStyle(color: Colors.white, fontSize: 20),
+                            'Title',
+                            style: TextStyle(color: Colors.white, fontSize: 30),
                           ),
                         ],
                       ),
                       const SizedBox(height: 20),
+                      Text(
+                        _payload.split('|')[0],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.description,
+                            size: 30,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 20),
+                          Text(
+                            'Description',
+                            style: TextStyle(color: Colors.white, fontSize: 30),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        _payload.split('|')[1],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                        ),
+                        textAlign: TextAlign.justify,
+                      ),
+                      const SizedBox(height: 20),
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 30,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 20),
+                          Text(
+                            'Date',
+                            style: TextStyle(color: Colors.white, fontSize: 30),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        _payload.split('|')[2],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                        ),
+                      ),
                     ],
                   ),
                 ),

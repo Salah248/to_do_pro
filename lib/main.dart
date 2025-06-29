@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:to_do_pro/ui/pages/notification_screen.dart';
+import 'package:to_do_pro/ui/theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,14 +15,9 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'ToDoPro',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: Colors.teal,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.teal,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-      ),
+      darkTheme: Themes.darkTheme,
+      themeMode: ThemeMode.light,
+      theme: Themes.lightTheme,
       home: const NotificationScreen(payload: 'Title|Description|2023-10-01'),
     );
   }

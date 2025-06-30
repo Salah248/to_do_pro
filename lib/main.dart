@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:to_do_pro/ui/pages/notification_screen.dart';
+
+import 'package:get/route_manager.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:to_do_pro/services/theme_services.dart';
+import 'package:to_do_pro/ui/pages/home_page.dart';
 import 'package:to_do_pro/ui/theme.dart';
 
-void main() {
+void main() async {
+  await GetStorage.init();
   runApp(const MyApp());
 }
 
@@ -16,9 +20,9 @@ class MyApp extends StatelessWidget {
       title: 'ToDoPro',
       debugShowCheckedModeBanner: false,
       darkTheme: Themes.darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: ThemeServices().theme,
       theme: Themes.lightTheme,
-      home: const NotificationScreen(payload: 'Title|Description|2023-10-01'),
+      home: const HomePage(),
     );
   }
 }

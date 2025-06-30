@@ -26,7 +26,7 @@ class Themes {
     brightness: Brightness.dark,
     scaffoldBackgroundColor: darkGreyClr,
     appBarTheme: const AppBarTheme(
-      backgroundColor: darkGreyClr,
+      backgroundColor: darkHeaderClr,
       foregroundColor: Colors.white,
       elevation: 0,
     ),

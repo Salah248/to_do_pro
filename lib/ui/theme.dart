@@ -15,21 +15,12 @@ class Themes {
     primaryColor: primaryClr,
     brightness: Brightness.light,
     scaffoldBackgroundColor: white,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: primaryClr,
-      foregroundColor: darkGreyClr,
-      elevation: 0,
-    ),
   );
+
   static final ThemeData darkTheme = ThemeData(
     primaryColor: darkGreyClr,
     brightness: Brightness.dark,
     scaffoldBackgroundColor: darkGreyClr,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: darkHeaderClr,
-      foregroundColor: Colors.white,
-      elevation: 0,
-    ),
   );
 }
 

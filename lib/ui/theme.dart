@@ -83,3 +83,7 @@ TextStyle get body2Style {
     ),
   );
 }
+
+TextStyle get body3Style {
+  return GoogleFonts.lato(color: Colors.blueGrey, fontWeight: FontWeight.w600);
+}

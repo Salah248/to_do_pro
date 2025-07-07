@@ -4,12 +4,14 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:to_do_pro/controllers/task_controller.dart';
+import 'package:to_do_pro/models/task.dart';
 import 'package:to_do_pro/services/notification_services.dart';
 import 'package:to_do_pro/services/theme_services.dart';
 import 'package:to_do_pro/ui/pages/add_task_page.dart';
 import 'package:to_do_pro/ui/size_config.dart';
 import 'package:to_do_pro/ui/theme.dart';
 import 'package:to_do_pro/ui/widgets/button.dart';
+import 'package:to_do_pro/ui/widgets/task_tile.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,6 +24,11 @@ class _HomePageState extends State<HomePage> {
   DateTime _nowDate = DateTime.now();
   final TaskController _taskController = Get.put(TaskController());
   late NotifyHelper notifyHelper;
+
+  // in initState we will initialize the NotifyHelper
+  // and then we will use it to request iOS permissions
+  // and initialize the notification settings.
+  // This is important to ensure that the notifications work properly on iOS devices.
   @override
   void initState() {
     notifyHelper = NotifyHelper();
@@ -71,7 +78,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [_addDateBar(), _dateBarPicker(), _noTaskMsg()],
+          children: [_addDateBar(), _dateBarPicker(), _showTasks()],
         ),
       ),
     );
@@ -90,7 +97,10 @@ class _HomePageState extends State<HomePage> {
                 DateFormat.yMMMMd().format(_nowDate),
                 style: subHeadingStyle,
               ),
-              Text('Today', style: subHeadingStyle),
+              Text(
+                _isToday(_nowDate) ? 'Today' : DateFormat.E().format(_nowDate),
+                style: subHeadingStyle,
+              ),
             ],
           ),
           const SizedBox(width: 20),
@@ -154,11 +164,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _showTasks() {
+    return TaskTile(
+      Task(
+        title: 'Sample Task',
+        startTime: '10:00 AM',
+        endTime: '11:00 AM',
+        color: 2, // Example color
+        isCompleted: 1,
+        note: 'This is a sample task note.',
+      ),
+    );
+  }
+
   Widget _dateBarPicker() {
     return Container(
       margin: const EdgeInsets.only(top: 6, left: 20),
       child: DatePicker(
-        _nowDate,
+        DateTime.now(),
         height: 100,
         width: 70,
         selectionColor: primaryClr,
@@ -175,5 +198,12 @@ class _HomePageState extends State<HomePage> {
         },
       ),
     );
+  }
+
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 }

@@ -5,6 +5,9 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:to_do_pro/ui/pages/notification_screen.dart';
 
+// in this class NotifyHelper we will handle all the notification related tasks
+// such as requesting permissions, initializing notifications, showing notifications,
+// scheduling notifications, and handling notification responses.
 class NotifyHelper {
   // المتغير الرئيسي للإشعارات
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =

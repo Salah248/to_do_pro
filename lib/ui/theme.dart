@@ -87,3 +87,7 @@ TextStyle get body2Style {
 TextStyle get body3Style {
   return GoogleFonts.lato(color: Colors.blueGrey, fontWeight: FontWeight.w600);
 }
+
+TextStyle get body4Style {
+  return GoogleFonts.lato();
+}

@@ -165,14 +165,29 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _showTasks() {
-    return TaskTile(
-      Task(
-        title: 'Sample Task',
-        startTime: '10:00 AM',
-        endTime: '11:00 AM',
-        color: 2, // Example color
-        isCompleted: 1,
-        note: 'This is a sample task note.',
+    return GestureDetector(
+      onTap: () {
+        _showBottomSheet(
+          context,
+          Task(
+            title: 'Sample Task',
+            startTime: '10:00 AM',
+            endTime: '11:00 AM',
+            color: 2, // Example color
+            isCompleted: 0,
+            note: 'This is a sample task note.',
+          ),
+        );
+      },
+      child: TaskTile(
+        Task(
+          title: 'Sample Task',
+          startTime: '10:00 AM',
+          endTime: '11:00 AM',
+          color: 2, // Example color
+          isCompleted: 0,
+          note: 'This is a sample task note.',
+        ),
       ),
     );
   }
@@ -205,5 +220,109 @@ class _HomePageState extends State<HomePage> {
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
+  }
+
+  _buildBottomSheet({
+    required String label,
+    required Function() onTap,
+    required Color clr,
+    bool isClose = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        height: 65,
+        width: SizeConfig.screenWidth * 0.9,
+        decoration: BoxDecoration(
+          border: Border.all(
+            width: 2,
+            color: isClose
+                ? Get.isDarkMode
+                      ? Colors.grey[600]!
+                      : Colors.grey[300]!
+                : clr,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          color: isClose ? Colors.transparent : clr,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: isClose
+                ? titleStyle
+                : titleStyle.copyWith(color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
+  _showBottomSheet(BuildContext context, Task task) {
+    Get.bottomSheet(
+      SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.only(top: 4),
+          width: SizeConfig.screenWidth,
+          height: (SizeConfig.orientation == Orientation.landscape)
+              ? (task.isCompleted == 1
+                    ? SizeConfig.screenHeight * .6
+                    : SizeConfig.screenHeight * .8)
+              : (task.isCompleted == 1
+                    ? SizeConfig.screenHeight * .40
+                    : SizeConfig.screenHeight * .49),
+          color: Get.isDarkMode ? darkHeaderClr : white,
+          child: Column(
+            children: [
+              Flexible(
+                child: Container(
+                  height: 6,
+                  width: 120,
+                  decoration: BoxDecoration(
+                    color: Get.isDarkMode ? Colors.grey[600] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              task.isCompleted == 1
+                  ? Container()
+                  : _buildBottomSheet(
+                      label: 'Task Completed',
+                      onTap: () {
+                        Get.back();
+                      },
+                      clr: primaryClr,
+                    ),
+              Divider(
+                color: Get.isDarkMode ? Colors.grey : darkGreyClr,
+                indent: 20,
+                endIndent: 20,
+              ),
+              _buildBottomSheet(
+                label: 'Delete Task',
+                onTap: () {
+                  Get.back();
+                },
+                clr: primaryClr,
+              ),
+              Divider(
+                color: Get.isDarkMode ? Colors.grey : darkGreyClr,
+                indent: 20,
+                endIndent: 20,
+              ),
+
+              _buildBottomSheet(
+                label: 'Cancel',
+                onTap: () {
+                  Get.back();
+                },
+                clr: primaryClr,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

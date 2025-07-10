@@ -81,13 +81,31 @@ class TaskTile extends StatelessWidget {
             ),
             RotatedBox(
               quarterTurns: 3,
-              child: Text(
-                task.isCompleted == 0 ? 'TODO' : 'Completed',
-                style: body4Style.copyWith(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: task.isCompleted == 0 ? Colors.white : Colors.green,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    task.isCompleted == 0 ? 'TODO' : 'Completed',
+                    style: body4Style.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: task.isCompleted == 0
+                          ? Colors.white70
+                          : Colors.green[200]!.withAlpha((.9 * 255).round()),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  task.isCompleted == 1
+                      ? Icon(
+                          Icons.check_box_rounded,
+                          color: task.isCompleted == 0
+                              ? Colors.white
+                              : Colors.green[200]!.withAlpha(
+                                  (.9 * 255).round(),
+                                ),
+                          size: 16,
+                        )
+                      : Container(),
+                ],
               ),
             ),
           ],

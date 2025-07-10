@@ -1,5 +1,6 @@
 import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -74,13 +75,13 @@ class _HomePageState extends State<HomePage> {
           SizedBox(width: 10),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [_addDateBar(), _dateBarPicker(), _showTasks()],
-        ),
-      ),
+      body: _taskController.taskList.isEmpty
+          ? SingleChildScrollView(
+              child: Column(
+                children: [_addDateBar(), _dateBarPicker(), _showTasks()],
+              ),
+            )
+          : Column(children: [_addDateBar(), _dateBarPicker(), _showTasks()]),
     );
   }
 
@@ -132,7 +133,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 SizeConfig.orientation == Orientation.landscape
                     ? const SizedBox(height: 6)
-                    : const SizedBox(height: 220),
+                    : const SizedBox(height: 180),
                 SvgPicture.asset(
                   'asset/images/task.svg',
                   height: 100,
@@ -155,7 +156,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizeConfig.orientation == Orientation.landscape
                     ? const SizedBox(height: 120)
-                    : const SizedBox(height: 180),
+                    : const SizedBox(height: 220),
               ],
             ),
           ),
@@ -165,31 +166,32 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _showTasks() {
-    return GestureDetector(
-      onTap: () {
-        _showBottomSheet(
-          context,
-          Task(
-            title: 'Sample Task',
-            startTime: '10:00 AM',
-            endTime: '11:00 AM',
-            color: 2, // Example color
-            isCompleted: 0,
-            note: 'This is a sample task note.',
-          ),
-        );
-      },
-      child: TaskTile(
-        Task(
-          title: 'Sample Task',
-          startTime: '10:00 AM',
-          endTime: '11:00 AM',
-          color: 2, // Example color
-          isCompleted: 0,
-          note: 'This is a sample task note.',
-        ),
-      ),
-    );
+    return _taskController.taskList.isEmpty
+        ? _noTaskMsg()
+        : Expanded(
+            child: ListView.builder(
+              scrollDirection: SizeConfig.orientation == Orientation.landscape
+                  ? Axis.horizontal
+                  : Axis.vertical,
+              itemCount: _taskController.taskList.length,
+              itemBuilder: (context, index) {
+                final task = _taskController.taskList[index];
+                return AnimationConfiguration.staggeredList(
+                  position: index,
+                  duration: const Duration(milliseconds: 1000),
+                  child: SlideAnimation(
+                    horizontalOffset: 300,
+                    child: FadeInAnimation(
+                      child: GestureDetector(
+                        onTap: () => _showBottomSheet(context, task),
+                        child: TaskTile(task),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
   }
 
   Widget _dateBarPicker() {
@@ -221,6 +223,20 @@ class _HomePageState extends State<HomePage> {
         date.month == now.month &&
         date.day == now.day;
   }
+
+  // the explaination of the _buildBottomSheet function and _showBottomSheet function
+  // firstly the _buildBottomSheet function is used to create a bottom sheet widget that displays a label, an onTap function, and a color.
+  // the parameters of the function are: label, onTap, clr, and isClose.
+  // the label parameter is used to display a label on the bottom sheet widget.
+  // the onTap parameter is used to specify the function that should be called when the user taps on the bottom sheet widget.
+  // the clr parameter is used to specify the color of the bottom sheet widget.
+  // the isClose parameter is used to specify whether the bottom sheet widget should be closed when the user taps on it.
+  // the _showBottomSheet function is used to show the bottom sheet widget when the user taps on the button.
+  // in _showBottomSheet function , we use Get.bottomSheet to display the bottom sheet widget.
+  // Get.bottomSheet is a method provided by the GetX package that allows you to easily create and display bottom sheets in your Flutter application.
+  // after that, we create a SingleChildScrollView widget to allow scrolling if the content exceeds the available height.
+  // we then create a Container widget to hold the content of the bottom sheet.
+  // we use Column widget to display the content of the bottom sheet.
 
   _buildBottomSheet({
     required String label,
@@ -294,11 +310,13 @@ class _HomePageState extends State<HomePage> {
                       },
                       clr: primaryClr,
                     ),
-              Divider(
-                color: Get.isDarkMode ? Colors.grey : darkGreyClr,
-                indent: 20,
-                endIndent: 20,
-              ),
+              task.isCompleted == 1
+                  ? Container()
+                  : Divider(
+                      color: Get.isDarkMode ? Colors.grey : darkGreyClr,
+                      indent: 20,
+                      endIndent: 20,
+                    ),
               _buildBottomSheet(
                 label: 'Delete Task',
                 onTap: () {

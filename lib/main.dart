@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:get/route_manager.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:to_do_pro/services/notification_services.dart';
 import 'package:to_do_pro/services/theme_services.dart';
 import 'package:to_do_pro/ui/pages/home_page.dart';
 import 'package:to_do_pro/ui/theme.dart';

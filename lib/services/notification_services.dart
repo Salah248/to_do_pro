@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_timezone_2025/flutter_native_timezone_2025.dart';
 import 'package:get/get.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:to_do_pro/models/task.dart';
 import 'package:to_do_pro/ui/pages/notification_screen.dart';
 
 // in this class NotifyHelper we will handle all the notification related tasks
@@ -12,6 +15,13 @@ class NotifyHelper {
   // المتغير الرئيسي للإشعارات
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  // this selectNotificationSubject is used to send a payload to the UI when a notification is tapped
+  final BehaviorSubject<String> selectNotificationSubject =
+      BehaviorSubject<String>();
+
+  // ⬅️ متغير احتياطي لتخزين الـ payload (اختياري)
+  String selectedNotificationPayload = '';
 
   // طلب أذونات iOS
   Future<void> requestIOSPermissions() async {
@@ -26,6 +36,8 @@ class NotifyHelper {
   Future<void> initializeNotification() async {
     // تهيئة التايم زون
     tz.initializeTimeZones();
+    _configureSelectNotificationSubject();
+    await _configureLocalTimeZone();
     // tz.setLocalLocation(tz.getLocation('Africa/Cairo')); // أو حسب منطقتك
 
     // إعدادات الأندرويد
@@ -65,6 +77,14 @@ class NotifyHelper {
     );
   }
 
+  // ✅ تهيئة التايم زون تلقائيًا حسب الجهاز
+  // we use _configureLocalTimeZone to set the local time zone based on the device's location
+  Future<void> _configureLocalTimeZone() async {
+    tz.initializeTimeZones();
+    final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
+  }
+
   // عرض إشعار فوري
   Future<void> showNotification({
     required String title,
@@ -96,12 +116,13 @@ class NotifyHelper {
   }
 
   // جدولة إشعار بعد وقت معين
-  Future<void> scheduleNotification() async {
+  Future<void> scheduleNotification(int hour, int minutes, Task task) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
-      'Scheduled Title',
-      'Scheduled Body',
-      tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+      task.id!,
+      task.title,
+      task.note,
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+      _nextInstanceOfTime(hour, minutes),
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'your_channel_id',
@@ -109,8 +130,29 @@ class NotifyHelper {
           channelDescription: 'your_channel_description',
         ),
       ),
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: '${task.title}|${task.note}|${task.startTime}|',
       androidScheduleMode: AndroidScheduleMode.exact,
     );
+  }
+
+  // ✅ حساب أقرب توقيت قادم بناءً على الساعة والدقيقة
+  // we use _nextInstanceOfTime to calculate the nearest time to schedule the notification
+  // based on the provided hour and minutes parameters and the current time
+  tz.TZDateTime _nextInstanceOfTime(int hour, int minutes) {
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minutes,
+    );
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+    return scheduledDate;
   }
 
   // التعامل مع الرد عند الضغط على الإشعار
@@ -120,5 +162,15 @@ class NotifyHelper {
       debugPrint('Notification payload: $payload');
     }
     await Get.to(NotificationScreen(payload: payload!));
+  }
+
+  // ✅ تهيئة الاستماع للـ payload من الإشعارات
+  // we use _configureSelectNotificationSubject to listen to the selectNotificationSubject stream
+  // and handle the notification selection
+  void _configureSelectNotificationSubject() {
+    selectNotificationSubject.stream.listen((String payload) async {
+      debugPrint('My payload is $payload');
+      await Get.to(() => NotificationScreen(payload: payload));
+    });
   }
 }

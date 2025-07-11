@@ -58,12 +58,6 @@ class _HomePageState extends State<HomePage> {
           ),
           onPressed: () {
             ThemeServices().switchTheme();
-            notifyHelper.showNotification(
-              title: 'Theme Changed',
-              body:
-                  'Theme changed to ${Get.isDarkMode ? 'Light' : 'Dark'} mode',
-            );
-            notifyHelper.scheduleNotification();
           },
         ),
         actions: const [
@@ -176,6 +170,19 @@ class _HomePageState extends State<HomePage> {
               itemCount: _taskController.taskList.length,
               itemBuilder: (context, index) {
                 final task = _taskController.taskList[index];
+                final hour = task.startTime.toString().split(':')[0];
+                final minute = task.startTime.toString().split(':')[1];
+                debugPrint('hour: $hour');
+                debugPrint('minute: $minute');
+                final date = DateFormat(
+                  'hh:mm a',
+                ).parse(task.startTime!.trim());
+                final myTime = DateFormat('HH:mm').format(date);
+                notifyHelper.scheduleNotification(
+                  int.parse(myTime.split(':')[0]),
+                  int.parse(myTime.split(':')[1]),
+                  task,
+                );
                 return AnimationConfiguration.staggeredList(
                   position: index,
                   duration: const Duration(milliseconds: 1000),

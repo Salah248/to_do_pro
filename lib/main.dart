@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:get/route_manager.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:to_do_pro/db/db_helper.dart';
 import 'package:to_do_pro/services/theme_services.dart';
 import 'package:to_do_pro/ui/pages/home_page.dart';
 import 'package:to_do_pro/ui/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await DBHelper.initDb();
   await GetStorage.init();
   // NotifyHelper().initializeNotification();
   runApp(const MyApp());

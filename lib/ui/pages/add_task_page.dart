@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:to_do_pro/controllers/task_controller.dart';
+import 'package:to_do_pro/models/task.dart';
 import 'package:to_do_pro/ui/theme.dart';
 import 'package:to_do_pro/ui/widgets/button.dart';
 import 'package:to_do_pro/ui/widgets/input_field.dart';
@@ -18,10 +19,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  final String _startTime = DateFormat(
-    'hh:mm a',
-  ).format(DateTime.now()).toString();
-  final String _endTime = DateFormat(
+  String _startTime = DateFormat('hh:mm a').format(DateTime.now()).toString();
+  String _endTime = DateFormat(
     'hh:mm a',
   ).format(DateTime.now().add(const Duration(minutes: 15))).toString();
 
@@ -69,8 +68,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 ),
                 const SizedBox(height: 10),
                 InputField(
-                  title: 'Note',
-                  hint: 'Enter your note',
+                  title: 'Task',
+                  hint: 'Enter your task',
                   controller: _noteController,
                 ),
                 const SizedBox(height: 10),
@@ -80,47 +79,48 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   widget: IconButton(
                     icon: const Icon(Icons.calendar_today_outlined),
                     onPressed: () async {
-                      final DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2101),
-                      );
-                      if (pickedDate != null) {
-                        setState(() {
-                          _selectedDate = pickedDate;
-                        });
-                      }
+                      await _getDateFromUser(context);
                     },
                   ),
                 ),
                 const SizedBox(height: 10),
+                // the first row off _selectTime is It is the best version of the second Row.
                 Row(
-                  children: [
-                    Expanded(
-                      child: InputField(
-                        title: 'Start Time',
-                        hint: _startTime,
-                        widget: IconButton(
-                          padding: const EdgeInsets.all(0),
-                          onPressed: () {},
-                          icon: const Icon(Icons.access_time_outlined),
-                        ),
+                  children: List.generate(2, (index) {
+                    return Expanded(
+                      child: _selectTime(
+                        isStartTime: index == 0 ? true : false,
                       ),
-                    ),
-                    Expanded(
-                      child: InputField(
-                        title: 'End Time',
-                        hint: _endTime,
-                        widget: IconButton(
-                          padding: const EdgeInsets.all(0),
-                          onPressed: () {},
-                          icon: const Icon(Icons.access_time_outlined),
-                        ),
-                      ),
-                    ),
-                  ],
+                    );
+                  }),
                 ),
+                // the second Row it is The traditional version of the first Row.
+                // Row(
+                //   children: [
+                //     Expanded(
+                //       child: InputField(
+                //         title: 'Start Time',
+                //         hint: _startTime,
+                //         widget: IconButton(
+                //           padding: const EdgeInsets.all(0),
+                //           onPressed: () => _getTimeFromUser(isStartTime: true),
+                //           icon: const Icon(Icons.access_time_outlined),
+                //         ),
+                //       ),
+                //     ),
+                //     Expanded(
+                //       child: InputField(
+                //         title: 'End Time',
+                //         hint: _endTime,
+                //         widget: IconButton(
+                //           padding: const EdgeInsets.all(0),
+                //           onPressed: () => _getTimeFromUser(isStartTime: false),
+                //           icon: const Icon(Icons.access_time_outlined),
+                //         ),
+                //       ),
+                //     ),
+                //   ],
+                // ),
                 const SizedBox(height: 10),
                 InputField(
                   title: 'Remind',
@@ -233,9 +233,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     ),
                     MyButton(
                       label: 'Create Task',
-                      onTap: () {
-                        Get.back();
-                      },
+                      onTap: () => _validateFields(),
                     ),
                   ],
                 ),
@@ -245,6 +243,103 @@ class _AddTaskPageState extends State<AddTaskPage> {
         ),
       ),
     );
+  }
+
+  Widget _selectTime({required bool isStartTime}) {
+    return InputField(
+      title: isStartTime ? 'Start Time' : 'End Time',
+      hint: isStartTime ? _startTime : _endTime,
+      widget: IconButton(
+        padding: const EdgeInsets.all(0),
+        onPressed: () {
+          if (isStartTime) {
+            _getTimeFromUser(isStartTime: true);
+          } else {
+            _getTimeFromUser(isStartTime: false);
+          }
+        },
+        icon: const Icon(Icons.access_time_outlined),
+      ),
+    );
+  }
+
+  Future<void> _getDateFromUser(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    } else {
+      print('Date not selected');
+    }
+  }
+
+  _getTimeFromUser({bool isStartTime = true}) async {
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialEntryMode: TimePickerEntryMode.dial,
+      initialTime: isStartTime
+          ? TimeOfDay.fromDateTime(DateTime.now())
+          : TimeOfDay.fromDateTime(
+              DateTime.now().add(const Duration(minutes: 15)),
+            ),
+    );
+    if (pickedTime == null) {
+      print('Time not selected');
+      return;
+    }
+    final String formattedTime = pickedTime.format(context);
+    if (isStartTime) {
+      setState(() {
+        _startTime = formattedTime;
+      });
+    } else if (!isStartTime) {
+      setState(() {
+        _endTime = formattedTime;
+      });
+    } else {
+      print('Time not selected or not valid or something went wrong');
+    }
+  }
+
+  _validateFields() {
+    if (_titleController.text.isNotEmpty && _noteController.text.isNotEmpty) {
+      _addTasksToDb();
+      Get.back();
+    } else if (_titleController.text.isEmpty || _noteController.text.isEmpty) {
+      Get.snackbar(
+        'Required',
+        'All fields are required!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.white,
+        colorText: pinkClr,
+        icon: const Icon(Icons.warning_amber_rounded, color: pinkClr),
+      );
+    } else {
+      print('All fields are empty!');
+    }
+  }
+
+  _addTasksToDb() async {
+    final int value = await _taskController.addTask(
+      task: Task(
+        title: _titleController.text,
+        note: _noteController.text,
+        isCompleted: 0,
+        date: DateFormat.yMd().format(_selectedDate),
+        startTime: _startTime,
+        endTime: _endTime,
+        color: _selectedColor,
+        remind: _selectedRemind,
+        repeat: _selectedRepeat,
+      ),
+    );
+    print(value);
   }
 
   @override

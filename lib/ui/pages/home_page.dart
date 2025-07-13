@@ -174,9 +174,7 @@ class _HomePageState extends State<HomePage> {
                 final minute = task.startTime.toString().split(':')[1];
                 debugPrint('hour: $hour');
                 debugPrint('minute: $minute');
-                final date = DateFormat(
-                  'hh:mm a',
-                ).parse(task.startTime!.trim());
+                final date = DateFormat('hh:mm a').parse(task.startTime!);
                 final myTime = DateFormat('HH:mm').format(date);
                 notifyHelper.scheduleNotification(
                   int.parse(myTime.split(':')[0]),

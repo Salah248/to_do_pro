@@ -1,22 +1,24 @@
-import 'package:get/get_state_manager/src/simple/get_controllers.dart';
-import 'package:intl/intl.dart';
+import 'package:get/get.dart';
+import 'package:to_do_pro/db/db_helper.dart';
 import 'package:to_do_pro/models/task.dart';
 
 class TaskController extends GetxController {
-  final taskList = <Task>[
-    Task(
-      id: 1,
-      title: 'Task 1',
-      note: 'Description for Task 1',
-      startTime: DateFormat(
-        'hh:mm a',
-      ).format(DateTime.now().add(const Duration(minutes: 1))).toString(),
-      color: 0,
-      isCompleted: 0,
-    ),
-  ];
+  final taskList = <Task>[].obs;
 
-  addTask({Task? task}) {}
+  Future<int> addTaskToDB({Task? task}) {
+    return DBHelper.insert(task!);
+  }
 
-  getTasks() {}
+  Future<void> getTasksFromDB() async {
+    final tasks = await DBHelper.query();
+    taskList.assignAll(tasks.map((data) => Task.fromJson(data)).toList());
+  }
+
+  Future<int> deleteTasksFromDB({Task? task}) async {
+    return DBHelper.delete(task!);
+  }
+
+  Future<int> markTaskCompletedInDB({int? id}) async {
+    return DBHelper.rawUpdate(id!);
+  }
 }

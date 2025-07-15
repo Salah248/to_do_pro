@@ -34,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     notifyHelper = NotifyHelper();
     notifyHelper.requestIOSPermissions();
+
     notifyHelper.initializeNotification();
 
     super.initState();
@@ -56,7 +57,7 @@ class _HomePageState extends State<HomePage> {
             size: 20,
             color: Get.isDarkMode ? Colors.white : darkGreyClr,
           ),
-          onPressed: () {
+          onPressed: () async {
             ThemeServices().switchTheme();
           },
         ),
@@ -69,13 +70,7 @@ class _HomePageState extends State<HomePage> {
           SizedBox(width: 10),
         ],
       ),
-      body: _taskController.taskList.isEmpty
-          ? SingleChildScrollView(
-              child: Column(
-                children: [_addDateBar(), _dateBarPicker(), _showTasks()],
-              ),
-            )
-          : Column(children: [_addDateBar(), _dateBarPicker(), _showTasks()]),
+      body: Column(children: [_addDateBar(), _dateBarPicker(), _showTasks()]),
     );
   }
 
@@ -104,7 +99,7 @@ class _HomePageState extends State<HomePage> {
             onTap: () async {
               // Add your task addition logic here
               await Get.to(() => const AddTaskPage());
-              //  _taskController.getTasks();
+              _taskController.getTasksFromDB();
             },
           ),
         ],
@@ -117,41 +112,44 @@ class _HomePageState extends State<HomePage> {
       children: [
         AnimatedPositioned(
           duration: const Duration(milliseconds: 2000),
-          child: SingleChildScrollView(
-            child: Wrap(
-              direction: SizeConfig.orientation == Orientation.landscape
-                  ? Axis.horizontal
-                  : Axis.vertical,
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizeConfig.orientation == Orientation.landscape
-                    ? const SizedBox(height: 6)
-                    : const SizedBox(height: 180),
-                SvgPicture.asset(
-                  'asset/images/task.svg',
-                  height: 100,
-                  semanticsLabel: 'Task',
-                  colorFilter: ColorFilter.mode(
-                    primaryClr.withAlpha((.5 * 255).round()),
-                    BlendMode.srcIn,
+          child: RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: SingleChildScrollView(
+              child: Wrap(
+                direction: SizeConfig.orientation == Orientation.landscape
+                    ? Axis.horizontal
+                    : Axis.vertical,
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SizeConfig.orientation == Orientation.landscape
+                      ? const SizedBox(height: 6)
+                      : const SizedBox(height: 180),
+                  SvgPicture.asset(
+                    'asset/images/task.svg',
+                    height: 100,
+                    semanticsLabel: 'Task',
+                    colorFilter: ColorFilter.mode(
+                      primaryClr.withAlpha((.5 * 255).round()),
+                      BlendMode.srcIn,
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 20,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 20,
+                    ),
+                    child: Text(
+                      'You do not have any task yet!\nAdd new task to make your day productive',
+                      style: subTitleStyle,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  child: Text(
-                    'You do not have any task yet!\nAdd new task to make your day productive',
-                    style: subTitleStyle,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizeConfig.orientation == Orientation.landscape
-                    ? const SizedBox(height: 120)
-                    : const SizedBox(height: 220),
-              ],
+                  SizeConfig.orientation == Orientation.landscape
+                      ? const SizedBox(height: 120)
+                      : const SizedBox(height: 220),
+                ],
+              ),
             ),
           ),
         ),
@@ -159,10 +157,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> _onRefresh() async {
+    await _taskController.getTasksFromDB();
+  }
+
   Widget _showTasks() {
-    return _taskController.taskList.isEmpty
-        ? _noTaskMsg()
-        : Expanded(
+    return Expanded(
+      child: Obx(() {
+        if (_taskController.taskList.isEmpty) {
+          return _noTaskMsg();
+        } else {
+          return RefreshIndicator(
+            onRefresh: _onRefresh,
             child: ListView.builder(
               scrollDirection: SizeConfig.orientation == Orientation.landscape
                   ? Axis.horizontal
@@ -176,6 +182,7 @@ class _HomePageState extends State<HomePage> {
                 debugPrint('minute: $minute');
                 final date = DateFormat('hh:mm a').parse(task.startTime!);
                 final myTime = DateFormat('HH:mm').format(date);
+
                 notifyHelper.scheduleNotification(
                   int.parse(myTime.split(':')[0]),
                   int.parse(myTime.split(':')[1]),
@@ -197,6 +204,9 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           );
+        }
+      }),
+    );
   }
 
   Widget _dateBarPicker() {
@@ -311,6 +321,7 @@ class _HomePageState extends State<HomePage> {
                   : _buildBottomSheet(
                       label: 'Task Completed',
                       onTap: () {
+                        _taskController.markTaskCompletedInDB(id: task.id);
                         Get.back();
                       },
                       clr: primaryClr,
@@ -325,6 +336,7 @@ class _HomePageState extends State<HomePage> {
               _buildBottomSheet(
                 label: 'Delete Task',
                 onTap: () {
+                  _taskController.deleteTasksFromDB(task: task);
                   Get.back();
                 },
                 clr: primaryClr,

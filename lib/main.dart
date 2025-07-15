@@ -9,9 +9,11 @@ import 'package:to_do_pro/ui/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // تهيئة قاعدة البيانات
   await DBHelper.initDb();
+
+  // تهيئة التخزين
   await GetStorage.init();
-  // NotifyHelper().initializeNotification();
   runApp(const MyApp());
 }
 

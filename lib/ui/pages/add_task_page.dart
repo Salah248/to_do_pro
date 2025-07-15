@@ -293,6 +293,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
       print('Time not selected');
       return;
     }
+    // this explain why use this condition if (!mounted) return;
+    // This error occurs because you are using
+    //BuildContext (in pickedTime.format(context))
+    // after await. This is dangerous because the widget might be unmounted before await returns.
+    // ✅ Solution:
+    // You must check that the state still exists using if (!mounted) return; before using context.
+    if (!mounted) return;
     final String formattedTime = pickedTime.format(context);
     if (isStartTime) {
       setState(() {
@@ -326,7 +333,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
   }
 
   _addTasksToDb() async {
-    final int value = await _taskController.addTask(
+    final int value = await _taskController.addTaskToDB(
       task: Task(
         title: _titleController.text,
         note: _noteController.text,

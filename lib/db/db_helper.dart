@@ -87,7 +87,7 @@ class DBHelper {
   // query function will query the database and return the tasks from the database
   // this function will be used to get the tasks from the database
   // we nead to pass the _tableName
-  static Future<List<Map<String, dynamic>>> query(Task task) async {
+  static Future<List<Map<String, dynamic>>> query() async {
     debugPrint('queried');
     return await _db!.query(_tableName);
   }

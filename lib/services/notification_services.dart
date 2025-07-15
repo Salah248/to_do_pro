@@ -34,6 +34,17 @@ class NotifyHelper {
 
   // تهيئة الإشعارات
   Future<void> initializeNotification() async {
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission();
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestExactAlarmsPermission();
     // تهيئة التايم زون
     tz.initializeTimeZones();
     _configureSelectNotificationSubject();
@@ -89,6 +100,7 @@ class NotifyHelper {
   Future<void> showNotification({
     required String title,
     required String body,
+    String? payload, // أضف الـ payload parameter
   }) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
@@ -107,11 +119,11 @@ class NotifyHelper {
     );
 
     await flutterLocalNotificationsPlugin.show(
-      0,
+      DateTime.now().millisecondsSinceEpoch.remainder(100000),
       title,
       body,
       notificationDetails,
-      payload: 'item_x',
+      payload: payload ?? 'default_payload', // استخدم الـ payload المرسل
     );
   }
 
@@ -130,9 +142,8 @@ class NotifyHelper {
           channelDescription: 'your_channel_description',
         ),
       ),
-      matchDateTimeComponents: DateTimeComponents.time,
       payload: '${task.title}|${task.note}|${task.startTime}|',
-      androidScheduleMode: AndroidScheduleMode.exact,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 
@@ -158,10 +169,9 @@ class NotifyHelper {
   // التعامل مع الرد عند الضغط على الإشعار
   void onDidReceiveNotificationResponse(NotificationResponse response) async {
     final String? payload = response.payload;
-    if (payload != null) {
-      debugPrint('Notification payload: $payload');
+    if (payload != null && payload.isNotEmpty) {
+      await Get.to(() => NotificationScreen(payload: payload));
     }
-    await Get.to(NotificationScreen(payload: payload!));
   }
 
   // ✅ تهيئة الاستماع للـ payload من الإشعارات

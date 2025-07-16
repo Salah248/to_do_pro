@@ -41,47 +41,89 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
+  PreferredSizeWidget? _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: context.theme.scaffoldBackgroundColor,
+      leading: IconButton(
+        padding: const EdgeInsets.all(0),
+        icon: Icon(
+          Get.isDarkMode
+              ? Icons.wb_sunny_outlined
+              : Icons.nightlight_round_outlined,
+          size: 20,
+          color: Get.isDarkMode ? Colors.white : darkGreyClr,
+        ),
+        onPressed: () async {
+          ThemeServices().switchTheme();
+          notifyHelper.showNotification(
+            title: "Theme Changed",
+            body: "Theme Changed",
+            payload: 'hhhhhh|sssss|564654',
+          );
+        },
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            Icons.cleaning_services_outlined,
+            size: 20,
+            color: Get.isDarkMode ? Colors.white : darkGreyClr,
+          ),
+          onPressed: () {
+            Get.dialog(
+              AlertDialog(
+                title: Text('Clear all tasks?', style: titleStyle),
+                content: Row(
+                  children: [
+                    TextButton(
+                      onPressed: () => Get.back(),
+                      child: const Text(
+                        'No',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        notifyHelper.cancelAllNotification();
+                        _taskController.deleteAllTasksFromDB();
+                        Get.back();
+                        Get.snackbar(
+                          'Deleted',
+                          'All tasks deleted successfully',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.blueGrey,
+                          colorText: pinkClr,
+                          icon: const Icon(Icons.done, color: pinkClr),
+                        );
+                      },
+                      child: const Text(
+                        'Yes',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        const CircleAvatar(
+          radius: 20,
+          backgroundImage: AssetImage('asset/images/person.jpeg'),
+          backgroundColor: Colors.transparent,
+        ),
+        const SizedBox(width: 10),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return Scaffold(
       backgroundColor: context.theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: context.theme.scaffoldBackgroundColor,
-        leading: IconButton(
-          padding: const EdgeInsets.all(0),
-          icon: Icon(
-            Get.isDarkMode
-                ? Icons.wb_sunny_outlined
-                : Icons.nightlight_round_outlined,
-            size: 20,
-            color: Get.isDarkMode ? Colors.white : darkGreyClr,
-          ),
-          onPressed: () async {
-            ThemeServices().switchTheme();
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.cleaning_services_outlined,
-              size: 20,
-              color: Get.isDarkMode ? Colors.white : darkGreyClr,
-            ),
-            onPressed: () {
-              notifyHelper.cancelAllNotification();
-              _taskController.deleteAllTasksFromDB();
-            },
-          ),
-          const CircleAvatar(
-            radius: 20,
-            backgroundImage: AssetImage('asset/images/person.jpeg'),
-            backgroundColor: Colors.transparent,
-          ),
-          const SizedBox(width: 10),
-        ],
-      ),
+      appBar: _buildAppBar(),
       body: Column(children: [_addDateBar(), _dateBarPicker(), _showTasks()]),
     );
   }

@@ -10,7 +10,6 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:to_do_pro/models/task.dart';
 import 'package:to_do_pro/ui/pages/notification_screen.dart';
-import 'package:to_do_pro/ui/theme.dart';
 
 // in this class NotifyHelper we will handle all the notification related tasks
 // such as requesting permissions, initializing notifications, showing notifications,
@@ -38,6 +37,7 @@ class NotifyHelper {
 
   // تهيئة الإشعارات
   Future<void> initializeNotification() async {
+    // طلب صلاحية الاشعارات
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin

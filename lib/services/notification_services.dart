@@ -132,6 +132,9 @@ class NotifyHelper {
   }
 
   // جدولة إشعار بعد وقت معين
+  // first we use ZonedSchedule to schedule the notification based on the provided hour, minutes, remind, repeat, and date
+  // then we use _nextInstanceOfTime to calculate the next instance of time based on the provided hour, minutes, remind, repeat, and
+  //
   Future<void> scheduleNotification(int hour, int minutes, Task task) async {
     await flutterLocalNotificationsPlugin.zonedSchedule(
       task.id!,
@@ -182,8 +185,10 @@ class NotifyHelper {
       hour,
       minutes,
     );
-    scheduledDate = afterRemind(remind, scheduledDate);
+
     log('first scheduledDate: $scheduledDate');
+
+    scheduledDate = afterRemind(remind, scheduledDate);
     // إذا كان الوقت المحدد قد مضى اليوم
     if (scheduledDate.isBefore(now)) {
       if (repeat == 'Daily') {
@@ -195,7 +200,8 @@ class NotifyHelper {
           hour,
           minutes,
         );
-      } else if (repeat == 'Weekly') {
+      }
+      if (repeat == 'Weekly') {
         scheduledDate = tz.TZDateTime(
           tz.local,
           now.year,
@@ -204,7 +210,8 @@ class NotifyHelper {
           hour,
           minutes,
         );
-      } else if (repeat == 'Monthly') {
+      }
+      if (repeat == 'Monthly') {
         scheduledDate = tz.TZDateTime(
           tz.local,
           now.year,
@@ -213,15 +220,13 @@ class NotifyHelper {
           hour,
           minutes,
         );
-        scheduledDate = afterRemind(remind, scheduledDate);
       }
-
-      log('Next scheduledDate: $scheduledDate');
-      return scheduledDate;
+      scheduledDate = afterRemind(remind, scheduledDate);
     }
 
     // إذا كان الوقت المحدد لم يحن بعد اليوم أو لم يتحقق أي شرط أعلاه
-    scheduledDate = afterRemind(remind, scheduledDate);
+
+    log('final scheduledDate: $scheduledDate');
     return scheduledDate;
   }
 
@@ -236,8 +241,6 @@ class NotifyHelper {
       case 20:
         scheduledDate = scheduledDate.subtract(const Duration(minutes: 20));
         break;
-      default:
-        scheduledDate = scheduledDate.subtract(const Duration(minutes: 5));
     }
     return scheduledDate;
   }

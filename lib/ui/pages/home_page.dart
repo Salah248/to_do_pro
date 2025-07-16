@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -36,8 +34,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     notifyHelper = NotifyHelper();
     notifyHelper.requestIOSPermissions();
-    notifyHelper.initializeNotification();
-    _taskController.getTasksFromDB();
+    notifyHelper.initializeNotification(); // تهيئة الإشعارات
+    _taskController.getTasksFromDB(); // تحميل المهام
     super.initState();
   }
 
@@ -56,11 +54,6 @@ class _HomePageState extends State<HomePage> {
         ),
         onPressed: () async {
           ThemeServices().switchTheme();
-          notifyHelper.showNotification(
-            title: "Theme Changed",
-            body: "Theme Changed",
-            payload: 'hhhhhh|sssss|564654',
-          );
         },
       ),
       actions: [
@@ -92,7 +85,7 @@ class _HomePageState extends State<HomePage> {
                           'Deleted',
                           'All tasks deleted successfully',
                           snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.blueGrey,
+                          backgroundColor: Colors.blueGrey[100],
                           colorText: pinkClr,
                           icon: const Icon(Icons.done, color: pinkClr),
                         );
@@ -253,8 +246,6 @@ class _HomePageState extends State<HomePage> {
                     int.parse(myTime.toString().split(':')[1]),
                     task,
                   );
-                  log('Scheduled Notification: ${task.title}');
-
                   return AnimationConfiguration.staggeredList(
                     position: index,
                     duration: const Duration(milliseconds: 1000),

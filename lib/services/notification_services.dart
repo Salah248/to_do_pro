@@ -1,12 +1,16 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone_2025/flutter_native_timezone_2025.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:to_do_pro/models/task.dart';
 import 'package:to_do_pro/ui/pages/notification_screen.dart';
+import 'package:to_do_pro/ui/theme.dart';
 
 // in this class NotifyHelper we will handle all the notification related tasks
 // such as requesting permissions, initializing notifications, showing notifications,
@@ -133,8 +137,14 @@ class NotifyHelper {
       task.id!,
       task.title,
       task.note,
-      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
-      _nextInstanceOfTime(hour, minutes),
+      // tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+      _nextInstanceOfTime(
+        hour,
+        minutes,
+        task.remind!,
+        task.repeat!,
+        task.date!,
+      ),
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'your_channel_id',
@@ -144,24 +154,90 @@ class NotifyHelper {
       ),
       payload: '${task.title}|${task.note}|${task.startTime}|',
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
   // ✅ حساب أقرب توقيت قادم بناءً على الساعة والدقيقة
   // we use _nextInstanceOfTime to calculate the nearest time to schedule the notification
   // based on the provided hour and minutes parameters and the current time
-  tz.TZDateTime _nextInstanceOfTime(int hour, int minutes) {
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(
+  tz.TZDateTime _nextInstanceOfTime(
+    int hour,
+    int minutes,
+    int remind,
+    String repeat,
+    String date,
+  ) {
+    final now = tz.TZDateTime.now(tz.local);
+    log('Now: $now');
+    final formatedDate = DateFormat.yMd().parse(date);
+    log('Formated Date: $formatedDate');
+    final fd = tz.TZDateTime.from(formatedDate, tz.local);
+    log('Local Formatted Date: $fd');
+    var scheduledDate = tz.TZDateTime(
       tz.local,
-      now.year,
-      now.month,
-      now.day,
+      fd.year,
+      fd.month,
+      fd.day,
       hour,
       minutes,
     );
+    scheduledDate = afterRemind(remind, scheduledDate);
+    log('first scheduledDate: $scheduledDate');
+    // إذا كان الوقت المحدد قد مضى اليوم
     if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
+      if (repeat == 'Daily') {
+        scheduledDate = tz.TZDateTime(
+          tz.local,
+          now.year,
+          now.month,
+          (formatedDate.day) + 1,
+          hour,
+          minutes,
+        );
+      } else if (repeat == 'Weekly') {
+        scheduledDate = tz.TZDateTime(
+          tz.local,
+          now.year,
+          now.month,
+          (formatedDate.day) + 7,
+          hour,
+          minutes,
+        );
+      } else if (repeat == 'Monthly') {
+        scheduledDate = tz.TZDateTime(
+          tz.local,
+          now.year,
+          (formatedDate.day) + 1,
+          formatedDate.day,
+          hour,
+          minutes,
+        );
+        scheduledDate = afterRemind(remind, scheduledDate);
+      }
+
+      log('Next scheduledDate: $scheduledDate');
+      return scheduledDate;
+    }
+
+    // إذا كان الوقت المحدد لم يحن بعد اليوم أو لم يتحقق أي شرط أعلاه
+    scheduledDate = afterRemind(remind, scheduledDate);
+    return scheduledDate;
+  }
+
+  tz.TZDateTime afterRemind(int remind, tz.TZDateTime scheduledDate) {
+    switch (remind) {
+      case 5:
+        scheduledDate = scheduledDate.subtract(const Duration(minutes: 5));
+      case 10:
+        scheduledDate = scheduledDate.subtract(const Duration(minutes: 10));
+      case 15:
+        scheduledDate = scheduledDate.subtract(const Duration(minutes: 15));
+      case 20:
+        scheduledDate = scheduledDate.subtract(const Duration(minutes: 20));
+        break;
+      default:
+        scheduledDate = scheduledDate.subtract(const Duration(minutes: 5));
     }
     return scheduledDate;
   }
@@ -182,5 +258,13 @@ class NotifyHelper {
       debugPrint('My payload is $payload');
       await Get.to(() => NotificationScreen(payload: payload));
     });
+  }
+
+  void cancelScheduledNotification(Task task) async {
+    await flutterLocalNotificationsPlugin.cancel(task.id!);
+  }
+
+  void cancelAllNotification() async {
+    await flutterLocalNotificationsPlugin.cancelAll();
   }
 }

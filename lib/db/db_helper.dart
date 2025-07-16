@@ -84,6 +84,11 @@ class DBHelper {
     return await _db!.delete(_tableName, where: 'id = ?', whereArgs: [task.id]);
   }
 
+  static Future<int> deleteAll() async {
+    debugPrint('deleted all tasks successfully');
+    return await _db!.delete(_tableName);
+  }
+
   // query function will query the database and return the tasks from the database
   // this function will be used to get the tasks from the database
   // we nead to pass the _tableName

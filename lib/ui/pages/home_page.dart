@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -22,7 +24,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  DateTime _nowDate = DateTime.now();
+  DateTime _selectedDate = DateTime.now();
   final TaskController _taskController = Get.put(TaskController());
   late NotifyHelper notifyHelper;
 
@@ -34,9 +36,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     notifyHelper = NotifyHelper();
     notifyHelper.requestIOSPermissions();
-
     notifyHelper.initializeNotification();
-
+    _taskController.getTasksFromDB();
     super.initState();
   }
 
@@ -61,13 +62,24 @@ class _HomePageState extends State<HomePage> {
             ThemeServices().switchTheme();
           },
         ),
-        actions: const [
-          CircleAvatar(
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.cleaning_services_outlined,
+              size: 20,
+              color: Get.isDarkMode ? Colors.white : darkGreyClr,
+            ),
+            onPressed: () {
+              notifyHelper.cancelAllNotification();
+              _taskController.deleteAllTasksFromDB();
+            },
+          ),
+          const CircleAvatar(
             radius: 20,
             backgroundImage: AssetImage('asset/images/person.jpeg'),
             backgroundColor: Colors.transparent,
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
         ],
       ),
       body: Column(children: [_addDateBar(), _dateBarPicker(), _showTasks()]),
@@ -84,11 +96,13 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                DateFormat.yMMMMd().format(_nowDate),
+                DateFormat.yMMMMd().format(_selectedDate),
                 style: subHeadingStyle,
               ),
               Text(
-                _isToday(_nowDate) ? 'Today' : DateFormat.E().format(_nowDate),
+                _isToday(_selectedDate)
+                    ? 'Today'
+                    : DateFormat.E().format(_selectedDate),
                 style: subHeadingStyle,
               ),
             ],
@@ -176,31 +190,45 @@ class _HomePageState extends State<HomePage> {
               itemCount: _taskController.taskList.length,
               itemBuilder: (context, index) {
                 final task = _taskController.taskList[index];
-                final hour = task.startTime.toString().split(':')[0];
-                final minute = task.startTime.toString().split(':')[1];
-                debugPrint('hour: $hour');
-                debugPrint('minute: $minute');
-                final date = DateFormat('hh:mm a').parse(task.startTime!);
-                final myTime = DateFormat('HH:mm').format(date);
+                if (task.date == DateFormat.yMd().format(_selectedDate) ||
+                    task.repeat == 'Daily' ||
+                    (task.repeat == 'Weekly' &&
+                        _selectedDate
+                                    .difference(
+                                      DateFormat.yMd().parse(task.date!),
+                                    )
+                                    .inDays %
+                                7 ==
+                            0) ||
+                    (task.repeat == 'Monthly' &&
+                        DateFormat.yMd().parse(task.date!).day ==
+                            _selectedDate.day)) {
+                  final date = DateFormat('hh:mm a').parse(task.startTime!);
+                  final myTime = DateFormat('HH:mm').format(date);
 
-                notifyHelper.scheduleNotification(
-                  int.parse(myTime.split(':')[0]),
-                  int.parse(myTime.split(':')[1]),
-                  task,
-                );
-                return AnimationConfiguration.staggeredList(
-                  position: index,
-                  duration: const Duration(milliseconds: 1000),
-                  child: SlideAnimation(
-                    horizontalOffset: 300,
-                    child: FadeInAnimation(
-                      child: GestureDetector(
-                        onTap: () => _showBottomSheet(context, task),
-                        child: TaskTile(task),
+                  notifyHelper.scheduleNotification(
+                    int.parse(myTime.toString().split(':')[0]),
+                    int.parse(myTime.toString().split(':')[1]),
+                    task,
+                  );
+                  log('Scheduled Notification: ${task.title}');
+
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 1000),
+                    child: SlideAnimation(
+                      horizontalOffset: 300,
+                      child: FadeInAnimation(
+                        child: GestureDetector(
+                          onTap: () => _showBottomSheet(context, task),
+                          child: TaskTile(task),
+                        ),
                       ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  return Container();
+                }
               },
             ),
           );
@@ -218,14 +246,14 @@ class _HomePageState extends State<HomePage> {
         width: 70,
         selectionColor: primaryClr,
         selectedTextColor: Colors.white,
-        initialSelectedDate: _nowDate,
+        initialSelectedDate: _selectedDate,
         dateTextStyle: body3Style.copyWith(fontSize: 20),
         dayTextStyle: body3Style.copyWith(fontSize: 16),
         monthTextStyle: body3Style.copyWith(fontSize: 12),
         onDateChange: (date) {
           // New date selected
           setState(() {
-            _nowDate = date;
+            _selectedDate = date;
           });
         },
       ),
@@ -321,6 +349,7 @@ class _HomePageState extends State<HomePage> {
                   : _buildBottomSheet(
                       label: 'Task Completed',
                       onTap: () {
+                        notifyHelper.cancelScheduledNotification(task);
                         _taskController.markTaskCompletedInDB(id: task.id);
                         Get.back();
                       },
@@ -336,10 +365,11 @@ class _HomePageState extends State<HomePage> {
               _buildBottomSheet(
                 label: 'Delete Task',
                 onTap: () {
+                  notifyHelper.cancelScheduledNotification(task);
                   _taskController.deleteTasksFromDB(task: task);
                   Get.back();
                 },
-                clr: primaryClr,
+                clr: pinkClr,
               ),
               Divider(
                 color: Get.isDarkMode ? Colors.grey : darkGreyClr,

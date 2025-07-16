@@ -30,7 +30,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         backgroundColor: context.theme.appBarTheme.backgroundColor,
         leading: IconButton(
           onPressed: () => Get.back(),
-          icon: const Icon(Icons.arrow_back_ios),
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: Get.isDarkMode ? Colors.white : darkGreyClr,
+          ),
         ),
         title: Text(
           _payload.split('|')[0],

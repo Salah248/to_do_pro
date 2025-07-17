@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 
+// This Class SizeConfig is used to get the size of the screen
+// and use it to make the UI responsive to different screen sizes
 class SizeConfig {
+  // _mediaQueryData is used to get the size of the screen
+  // screenWidth and screenHeight is used to get the width and height of the screen
+  // defaultSize is used to get the default size of the screen
+  // orientation is used to get the orientation of the screen (landscape or portrait)
   static late MediaQueryData _mediaQueryData;
   static late double screenWidth;
   static late double screenHeight;
   //static late double defaultSize;
   static late Orientation orientation;
 
+  // init is used to initialize the values of the variables
   void init(BuildContext context) {
     _mediaQueryData = MediaQuery.of(context);
     screenWidth = _mediaQueryData.size.width;
